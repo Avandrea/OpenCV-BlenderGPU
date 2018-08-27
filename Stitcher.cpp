@@ -13,7 +13,7 @@ using namespace cv::detail;
 //std::ofstream Stitcher::logFile;
 //#endif
 
-MedusaCalibrationTool::Stitcher::Stitcher(std::vector<Mat> images)
+Stitcher::Stitcher(std::vector<Mat> images)
 {
 	_images = images;
 	_numImagesTot = (int)images.size();
@@ -34,7 +34,7 @@ MedusaCalibrationTool::Stitcher::Stitcher(std::vector<Mat> images)
 }
 
 
-MedusaCalibrationTool::Stitcher::~Stitcher(void)
+Stitcher::~Stitcher(void)
 {
 	for (int img_idx = 0; img_idx < _masksWarpedSeam.size(); ++img_idx)
 	{
@@ -62,7 +62,7 @@ MedusaCalibrationTool::Stitcher::~Stitcher(void)
 	_imagesWarped.clear();
 }
 
-bool MedusaCalibrationTool::Stitcher::ComputeRegistration(StitchingParams params)
+bool Stitcher::ComputeRegistration(StitchingParams params)
 {
 	return ComputeRegistration(params.show_overview_in_panorama, params.features_type, params.work_megapix,
 		params.match_conf, params.conf_thresh,
@@ -72,7 +72,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeRegistration(StitchingParams params
 		params.seam_find_type,
 		params.expos_comp_type, params.compose_megapix, params.blend_type, params.blend_strength);
 }
-bool MedusaCalibrationTool::Stitcher::ComputeRegistration(bool showOverviewInPanorama, FeatureTypes featureTypes, double workMegapix,
+bool Stitcher::ComputeRegistration(bool showOverviewInPanorama, FeatureTypes featureTypes, double workMegapix,
 	float matchConf, float confThresh,
 	BaCostFunctions baCostFunc, std::string baRefineMask,
 	bool doWaveCorrect, cv::detail::WaveCorrectKind waveCorrection,
@@ -132,7 +132,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeRegistration(bool showOverviewInPan
 
 
 #ifdef WITH_CUDA
-bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::cuda::GpuMat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
+bool Stitcher::ComputeCompositing(std::vector<cv::cuda::GpuMat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
 {
 #if ENABLE_LOG
 	int64 t = getTickCount();
@@ -150,7 +150,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::cuda::G
 	return res;
 }
 #else
-	bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::Mat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
+	bool Stitcher::ComputeCompositing(std::vector<cv::Mat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
 	{
 	#if ENABLE_LOG
 		int64 t = getTickCount();
@@ -169,7 +169,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::cuda::G
 	}
 #endif
 
-bool MedusaCalibrationTool::Stitcher::FindFeatures(FeatureTypes featureTypes, double workMegapix)
+bool Stitcher::FindFeatures(FeatureTypes featureTypes, double workMegapix)
 {
 	if (_numImagesTot < 2)
 	{
@@ -252,7 +252,7 @@ bool MedusaCalibrationTool::Stitcher::FindFeatures(FeatureTypes featureTypes, do
 }
 
 
-bool MedusaCalibrationTool::Stitcher::MatchFeatures(float matchConf, float confThresh)
+bool Stitcher::MatchFeatures(float matchConf, float confThresh)
 {
 	if (_features.size() == 0)
 	{
@@ -376,7 +376,7 @@ bool MedusaCalibrationTool::Stitcher::MatchFeatures(float matchConf, float confT
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::EstimateCameraParameters()
+bool Stitcher::EstimateCameraParameters()
 {
 	if (_features.size() == 0)
 	{
@@ -412,7 +412,7 @@ bool MedusaCalibrationTool::Stitcher::EstimateCameraParameters()
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFunc, std::string baRefineMask)
+bool Stitcher::BundleAdjustment(BaCostFunctions baCostFunc, std::string baRefineMask)
 {
 	if (_cameras.size() == 0)
 	{
@@ -471,7 +471,7 @@ bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFun
 
 }
 
-bool MedusaCalibrationTool::Stitcher::WaveCorrection(WaveCorrectKind waveCorrection)
+bool Stitcher::WaveCorrection(WaveCorrectKind waveCorrection)
 {
 	if (_cameras.size() == 0)
 	{
@@ -490,7 +490,7 @@ bool MedusaCalibrationTool::Stitcher::WaveCorrection(WaveCorrectKind waveCorrect
 }
 
 
-bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seamMegapix)
+bool Stitcher::WarpAux(WarpingTypes warpType, double seamMegapix)
 {
 	if (_cameras.size() == 0)
 	{
@@ -654,7 +654,7 @@ bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seam
 }
 
 
-bool MedusaCalibrationTool::Stitcher::SeamFinding(SeamFindTypes seamFindType)
+bool Stitcher::SeamFinding(SeamFindTypes seamFindType)
 {
 	if (_imagesWarped.size() <= 0)
 	{
@@ -735,7 +735,7 @@ bool MedusaCalibrationTool::Stitcher::SeamFinding(SeamFindTypes seamFindType)
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::Prepare(int exposCompType, double composeMegapix, int blendType, float blendStrength)
+bool Stitcher::Prepare(int exposCompType, double composeMegapix, int blendType, float blendStrength)
 {
 	if (!_isComposeScaleSet)
 	{
@@ -771,7 +771,7 @@ bool MedusaCalibrationTool::Stitcher::Prepare(int exposCompType, double composeM
 }
 
 
-bool MedusaCalibrationTool::Stitcher::PrepareExposureCompensator(int exposCompType)
+bool Stitcher::PrepareExposureCompensator(int exposCompType)
 {
 	if (_corners.size() == 0)
 	{
@@ -797,7 +797,7 @@ bool MedusaCalibrationTool::Stitcher::PrepareExposureCompensator(int exposCompTy
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::PrepareWarp()
+bool Stitcher::PrepareWarp()
 {
 	if (_warperCreator.empty())
 	{
@@ -890,7 +890,7 @@ bool MedusaCalibrationTool::Stitcher::PrepareWarp()
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::PrepareBlend(int blendType, float blendStrength)
+bool Stitcher::PrepareBlend(int blendType, float blendStrength)
 {
 	if (_corners.size() < _numImages)
 	{
@@ -934,7 +934,7 @@ bool MedusaCalibrationTool::Stitcher::PrepareBlend(int blendType, float blendStr
 }
 
 #ifdef WITH_CUDA
-bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
+bool Stitcher::Compose(std::vector<cuda::GpuMat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
 {
 
 #if ENABLE_LOG
@@ -1214,7 +1214,7 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, 
 	return true;
 }
 #else
-bool MedusaCalibrationTool::Stitcher::Compose(std::vector<Mat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama)
+bool Stitcher::Compose(std::vector<Mat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama)
 {
 	if (_numImagesTot <= 0)
 	{
@@ -1412,7 +1412,7 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<Mat> images, Mat& resu
 }
 #endif
 
-void MedusaCalibrationTool::Stitcher::Serialize(char* buffer, int& size)
+void Stitcher::Serialize(char* buffer, int& size)
 {
 //#if ENABLE_LOG
 //	int64 t_tot = getTickCount();
@@ -1587,7 +1587,7 @@ void MedusaCalibrationTool::Stitcher::Serialize(char* buffer, int& size)
 //#endif
 }
 
-bool MedusaCalibrationTool::Stitcher::Deserialize(const char* buffer, int size)
+bool Stitcher::Deserialize(const char* buffer, int size)
 {
 //#if ENABLE_LOG
 //	int64 t_tot = getTickCount();
@@ -1912,6 +1912,6 @@ bool MedusaCalibrationTool::Stitcher::Deserialize(const char* buffer, int size)
 	return true;
 }
 
-void MedusaCalibrationTool::Stitcher::DeleteBlender() {
+void Stitcher::DeleteBlender() {
 	delete _customBlender;
 }
