@@ -1,8 +1,8 @@
 #include "Stitcher.h"
 
-using namespace std;
-using namespace cv;
-using namespace cv::detail;
+//using namespace std;
+//using namespace cv;
+//using namespace cv::detail;
 
 #define LOGLN(msg) std::cout << msg << std::endl
 
@@ -13,7 +13,7 @@ using namespace cv::detail;
 //std::ofstream Stitcher::logFile;
 //#endif
 
-MedusaCalibrationTool::Stitcher::Stitcher(std::vector<Mat> images)
+Stitcher::Stitcher(std::vector<cv::Mat> images)
 {
 	_images = images;
 	_numImagesTot = (int)images.size();
@@ -34,7 +34,7 @@ MedusaCalibrationTool::Stitcher::Stitcher(std::vector<Mat> images)
 }
 
 
-MedusaCalibrationTool::Stitcher::~Stitcher(void)
+Stitcher::~Stitcher(void)
 {
 	for (int img_idx = 0; img_idx < _masksWarpedSeam.size(); ++img_idx)
 	{
@@ -62,7 +62,7 @@ MedusaCalibrationTool::Stitcher::~Stitcher(void)
 	_imagesWarped.clear();
 }
 
-bool MedusaCalibrationTool::Stitcher::ComputeRegistration(StitchingParams params)
+bool Stitcher::ComputeRegistration(StitchingParams params)
 {
 	return ComputeRegistration(params.show_overview_in_panorama, params.features_type, params.work_megapix,
 		params.match_conf, params.conf_thresh,
@@ -72,7 +72,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeRegistration(StitchingParams params
 		params.seam_find_type,
 		params.expos_comp_type, params.compose_megapix, params.blend_type, params.blend_strength);
 }
-bool MedusaCalibrationTool::Stitcher::ComputeRegistration(bool showOverviewInPanorama, FeatureTypes featureTypes, double workMegapix,
+bool Stitcher::ComputeRegistration(bool showOverviewInPanorama, FeatureTypes featureTypes, double workMegapix,
 	float matchConf, float confThresh,
 	BaCostFunctions baCostFunc, std::string baRefineMask,
 	bool doWaveCorrect, cv::detail::WaveCorrectKind waveCorrection,
@@ -132,7 +132,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeRegistration(bool showOverviewInPan
 
 
 #ifdef WITH_CUDA
-bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::cuda::GpuMat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
+bool Stitcher::ComputeCompositing(std::vector<cv::cuda::GpuMat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
 {
 #if ENABLE_LOG
 	int64 t = getTickCount();
@@ -150,7 +150,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::cuda::G
 	return res;
 }
 #else
-	bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::Mat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
+	bool Stitcher::ComputeCompositing(std::vector<cv::Mat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
 	{
 	#if ENABLE_LOG
 		int64 t = getTickCount();
@@ -169,7 +169,7 @@ bool MedusaCalibrationTool::Stitcher::ComputeCompositing(std::vector<cv::cuda::G
 	}
 #endif
 
-bool MedusaCalibrationTool::Stitcher::FindFeatures(FeatureTypes featureTypes, double workMegapix)
+bool Stitcher::FindFeatures(FeatureTypes featureTypes, double workMegapix)
 {
 	if (_numImagesTot < 2)
 	{
@@ -177,43 +177,125 @@ bool MedusaCalibrationTool::Stitcher::FindFeatures(FeatureTypes featureTypes, do
 		return false;
 	}
 
-	Ptr<FeaturesFinder> finder;
-	switch (featureTypes)
-	{
-	case SURF:
-	{
-#ifdef WITH_CUDA
-	#ifdef HAVE_OPENCV_XFEATURES2D
-		if (cuda::getCudaEnabledDeviceCount() > 0)
-			finder = makePtr<SurfFeaturesFinderGpu>();
-		else
-	#endif
-#endif
-			finder = makePtr<SurfFeaturesFinder>();
-		break;
-	}
-	case ORB:
-	{
-				finder = makePtr<OrbFeaturesFinder>();
-				break;
-	}
-	default:
-		LOGLN("[Stitcher] ERROR: unknown feature type");
-		return false;
-	}
+//	Ptr<cv::detail::FeaturesFinder> finder;
+//	switch (featureTypes)
+//	{
+//	case SURF:
+//	{
+//#ifdef WITH_CUDA
+//	#ifdef HAVE_OPENCV_XFEATURES2D
+//		if (cuda::getCudaEnabledDeviceCount() > 0)
+//			finder = makePtr<SurfFeaturesFinderGpu>();
+//		else
+//	#endif
+//#endif
+//			finder = makePtr<SurfFeaturesFinder>();
+//		break;
+//	}
+//	case ORB:
+//	{
+//				finder = makePtr<OrbFeaturesFinder>();
+//				break;
+//	}
+//	default:
+//		LOGLN("[Stitcher] ERROR: unknown feature type");
+//		return false;
+//	}
+//
+//	_features.resize(_numImagesTot);
+//
+//	Mat full_img, img;
+//
+//	for (int i = 0; i < _numImagesTot; ++i)
+//	{
+//		full_img = _images[i];
+//
+//		if (full_img.empty())
+//		{
+//			LOGLN("[Stitcher] ERROR: Empty image #" << i);
+//			return false;
+//		}
+//		if (workMegapix < 0)
+//		{
+//			img = full_img;
+//			_workScale = 1;
+//			_isWorkScaleSet = true;
+//		}
+//		else
+//		{
+//			if (!_isWorkScaleSet)
+//			{
+//				_workScale = min(1.0, sqrt(workMegapix * 1e6 / full_img.size().area()));
+//				_isWorkScaleSet = true;
+//			}
+//			cv::resize(full_img, img, Size(), _workScale, _workScale);
+//		}
+//
+//		(*finder)(img, _features[i]);
+//		_features[i].img_idx = i;
+//		LOGLN("Features in image #" << i+1 << ": " << _features[i].keypoints.size());
+//		
+//		// Debug features results
+//		//Mat out;
+//		//drawKeypoints(img, _features[i].keypoints, out);
+//		//imshow("output keypoints", out);
+//		//waitKey(0);
+//		//out.release();
+//		//destroyWindow("output keypoints");
+//		// ----------------
+//	}
+//
+//	finder->collectGarbage();
+//	full_img.release();
+//	img.release();
+//	return true;
 
+
+
+
+
+
+
+	//////////////////////
+	LOGLN("Finding features...");
+#if ENABLE_LOG
+	int64 t = getTickCount();
+#endif
+	cv::Ptr<cv::Feature2D> finder;
+	if (featureTypes == FeatureTypes::ORB)
+	{
+		finder = cv::ORB::create();
+	}
+#ifdef HAVE_OPENCV_XFEATURES2D
+	else if (featureTypes == FeatureTypes::SURF)
+	{
+		finder = cv::xfeatures2d::SURF::create();
+	}
+	else if (featureTypes == FeatureTypes::SIFT) {
+		finder = cv::xfeatures2d::SIFT::create();
+	}
+#endif
+	else
+	{
+		std::cout << "Unknown 2D features type: '" << featureTypes << "'.\n";
+		return -1;
+	}
 	_features.resize(_numImagesTot);
 
-	Mat full_img, img;
+	cv::Mat full_img, img;
+	//vector<ImageFeatures> features(_numImagesTot);
+	//vector<cv::Mat> images(_numImagesTot);
+	//vector<Size> full_img_sizes(_numImagesTot);
+	//double seam_work_aspect = 1;
 
 	for (int i = 0; i < _numImagesTot; ++i)
 	{
 		full_img = _images[i];
-
+		//full_img_sizes[i] = full_img.size();
 		if (full_img.empty())
 		{
-			LOGLN("[Stitcher] ERROR: Empty image #" << i);
-			return false;
+			//LOGLN("Can't open image " << img_names[i]);
+			return -1;
 		}
 		if (workMegapix < 0)
 		{
@@ -225,34 +307,28 @@ bool MedusaCalibrationTool::Stitcher::FindFeatures(FeatureTypes featureTypes, do
 		{
 			if (!_isWorkScaleSet)
 			{
-				_workScale = min(1.0, sqrt(workMegapix * 1e6 / full_img.size().area()));
+				_workScale = cv::min(1.0, sqrt(workMegapix * 1e6 / full_img.size().area()));
 				_isWorkScaleSet = true;
 			}
-			cv::resize(full_img, img, Size(), _workScale, _workScale);
+			resize(full_img, img, cv::Size(), _workScale, _workScale, cv::INTER_LINEAR_EXACT);
 		}
 
-		(*finder)(img, _features[i]);
+		computeImageFeatures(finder, img, _features[i]);
 		_features[i].img_idx = i;
-		LOGLN("Features in image #" << i+1 << ": " << _features[i].keypoints.size());
-		
-		// Debug features results
-		//Mat out;
-		//drawKeypoints(img, _features[i].keypoints, out);
-		//imshow("output keypoints", out);
-		//waitKey(0);
-		//out.release();
-		//destroyWindow("output keypoints");
-		// ----------------
+		LOGLN("Features in image #" << i + 1 << ": " << _features[i].keypoints.size());
+		//resize(full_img, img, Size(), seam_scale, seam_scale, INTER_LINEAR_EXACT);
+		//images[i] = img.clone();
 	}
 
-	finder->collectGarbage();
 	full_img.release();
 	img.release();
+	//LOGLN("Finding features, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
+
 	return true;
 }
 
 
-bool MedusaCalibrationTool::Stitcher::MatchFeatures(float matchConf, float confThresh)
+bool Stitcher::MatchFeatures(float matchConf, float confThresh)
 {
 	if (_features.size() == 0)
 	{
@@ -271,16 +347,16 @@ bool MedusaCalibrationTool::Stitcher::MatchFeatures(float matchConf, float confT
 		_features = temp_features;
 
 		//LOGLN("[Stitcher]  Total matches found: " << _pairwiseMatches.size());
-		Ptr<FeaturesMatcher> matcher;
+		cv::Ptr<cv::detail::FeaturesMatcher> matcher;
 		//TODO: parametrizzare rangewidth e matcherType
 		int range_width = -1;
-		string matcher_type="";
+		std::string matcher_type="";
 		if (matcher_type == "affine")
-			matcher = makePtr<AffineBestOf2NearestMatcher>(false, true, matchConf);
+			matcher = cv::makePtr<cv::detail::AffineBestOf2NearestMatcher>(false, true, matchConf);
 		else if (range_width==-1)
-			matcher = makePtr<BestOf2NearestMatcher>(true, matchConf);
+			matcher = cv::makePtr<cv::detail::BestOf2NearestMatcher>(true, matchConf);
 		else
-			matcher = makePtr<BestOf2NearestRangeMatcher>(range_width, true, matchConf);
+			matcher = cv::makePtr<cv::detail::BestOf2NearestRangeMatcher>(range_width, true, matchConf);
 		(*matcher)(_features, _pairwiseMatches);
 		LOGLN("[Stitcher]  Total matches found: " << _pairwiseMatches.size());
 		matcher->collectGarbage();
@@ -341,9 +417,9 @@ bool MedusaCalibrationTool::Stitcher::MatchFeatures(float matchConf, float confT
 		//	LOG("" << _validIndices[i] << "  ");
 		//LOGLN("");
 
-		vector<Mat> img_subset;
-		vector<string> img_names_subset;
-		vector<Size> full_img_sizes_subset;
+		std::vector<cv::Mat> img_subset;
+		std::vector<std::string> img_names_subset;
+		std::vector<cv::Size> full_img_sizes_subset;
 
 		for (size_t i = 0; i < _validIndices.size(); ++i)
 		{
@@ -376,7 +452,7 @@ bool MedusaCalibrationTool::Stitcher::MatchFeatures(float matchConf, float confT
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::EstimateCameraParameters()
+bool Stitcher::EstimateCameraParameters()
 {
 	if (_features.size() == 0)
 	{
@@ -389,22 +465,22 @@ bool MedusaCalibrationTool::Stitcher::EstimateCameraParameters()
 		return false;
 	}
 
-	Ptr<Estimator> estimator;
-	String estimator_type = "";
+	cv::Ptr<cv::detail::Estimator> estimator;
+	std::string estimator_type = "";
 	if (estimator_type == "affine")
-		estimator = makePtr<AffineBasedEstimator>();
+		estimator = cv::makePtr<cv::detail::AffineBasedEstimator>();
 	else
-		estimator = makePtr<HomographyBasedEstimator>();
+		estimator = cv::makePtr<cv::detail::HomographyBasedEstimator>();
 
     if (!(*estimator)(_features, _pairwiseMatches, _cameras))
     {
-        cout << "[Stitcher] Homography estimation failed.\n";
+        std::cout << "[Stitcher] Homography estimation failed.\n";
         return false;
     }
 
 	for (size_t i = 0; i < _cameras.size(); ++i)
 	{
-		Mat R;
+		cv::Mat R;
 		_cameras[i].R.convertTo(R, CV_32F);
 		_cameras[i].R = R;
 		//LOGLN("Initial intrinsics #" << _validIndices[i]+1 << ":\n" << _cameras[i].K());
@@ -412,7 +488,7 @@ bool MedusaCalibrationTool::Stitcher::EstimateCameraParameters()
 	return true;
 }
 
-bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFunc, std::string baRefineMask)
+bool Stitcher::BundleAdjustment(BaCostFunctions baCostFunc, std::string baRefineMask)
 {
 	if (_cameras.size() == 0)
 	{
@@ -430,20 +506,20 @@ bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFun
 		return false;
 	}
 
-	Ptr<detail::BundleAdjusterBase> adjuster;
+	cv::Ptr<cv::detail::BundleAdjusterBase> adjuster;
 	switch (baCostFunc)
 	{
 	case REPROJ:
-		adjuster = makePtr<detail::BundleAdjusterReproj>();
+		adjuster = cv::makePtr<cv::detail::BundleAdjusterReproj>();
 		break;
 	case RAY:
-		adjuster = makePtr<detail::BundleAdjusterRay>();
+		adjuster = cv::makePtr<cv::detail::BundleAdjusterRay>();
 		break;
 	case AFFINE:
-		adjuster = makePtr<detail::BundleAdjusterAffinePartial>();
+		adjuster = cv::makePtr<cv::detail::BundleAdjusterAffinePartial>();
 		break;
 	case NONE:
-		adjuster = makePtr<NoBundleAdjuster>();
+		adjuster = cv::makePtr<cv::detail::NoBundleAdjuster>();
 		break;
 	default:
 		LOGLN("[Stitcher] ERROR: Unknown ba cost function");
@@ -452,7 +528,7 @@ bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFun
 
 	adjuster->setConfThresh(_confThresh);
 
-	Mat_<uchar> refine_mask = Mat::zeros(3, 3, CV_8U);
+	cv::Mat_<uchar> refine_mask = cv::Mat::zeros(3, 3, CV_8U);
 	if (baRefineMask[0] == 'x') refine_mask(0, 0) = 1;
 	if (baRefineMask[1] == 'x') refine_mask(0, 1) = 1;
 	if (baRefineMask[2] == 'x') refine_mask(0, 2) = 1;
@@ -463,7 +539,7 @@ bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFun
 
     if (!(*adjuster)(_features, _pairwiseMatches, _cameras))
     {
-        cout << "Camera parameters adjusting failed.\n";
+        std::cout << "Camera parameters adjusting failed.\n";
         return false;
     }
 
@@ -471,7 +547,7 @@ bool MedusaCalibrationTool::Stitcher::BundleAdjustment(BaCostFunctions baCostFun
 
 }
 
-bool MedusaCalibrationTool::Stitcher::WaveCorrection(WaveCorrectKind waveCorrection)
+bool Stitcher::WaveCorrection(cv::detail::WaveCorrectKind waveCorrection)
 {
 	if (_cameras.size() == 0)
 	{
@@ -479,7 +555,7 @@ bool MedusaCalibrationTool::Stitcher::WaveCorrection(WaveCorrectKind waveCorrect
 		return false;
 	}
 
-	vector<Mat> rmats;
+	std::vector<cv::Mat> rmats;
 	for (size_t i = 0; i < _cameras.size(); ++i)
 		rmats.push_back(_cameras[i].R);
 	waveCorrect(rmats, waveCorrection);
@@ -490,7 +566,7 @@ bool MedusaCalibrationTool::Stitcher::WaveCorrection(WaveCorrectKind waveCorrect
 }
 
 
-bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seamMegapix)
+bool Stitcher::WarpAux(WarpingTypes warpType, double seamMegapix)
 {
 	if (_cameras.size() == 0)
 	{
@@ -499,12 +575,12 @@ bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seam
 	}
 
 	// Find median focal length
-	vector<double> focals;
+	std::vector<double> focals;
 	for (size_t i = 0; i < _cameras.size(); ++i)
 	{
 		focals.push_back(_cameras[i].focal);
 	}
-	sort(focals.begin(), focals.end());
+	std::sort(focals.begin(), focals.end());
 
 	if (focals.size() % 2 == 1)
 		_warpedImageScale = static_cast<float>(focals[focals.size() / 2]);
@@ -514,24 +590,24 @@ bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seam
 	_corners.resize(_numImages);
 	_masksWarpedSeam.resize(_numImages);
 	_imagesWarped.resize(_numImages);
-	vector<Mat> masks(_numImages);
+	std::vector<cv::Mat> masks(_numImages);
 
 	// Warp images and their masks
 	if (_warperCreator.empty())
 	{
 #ifdef HAVE_OPENCV_CUDAWARPING
-		if (cuda::getCudaEnabledDeviceCount() > 0)
+		if (cv::cuda::getCudaEnabledDeviceCount() > 0)
 		{
 			switch (warpType)
 			{
 			case PLANE:
-				_warperCreator = makePtr<cv::PlaneWarperGpu>();
+				_warperCreator = cv::makePtr<cv::PlaneWarperGpu>();
 				break;
 			case CYLINDRICAL:
-				_warperCreator = makePtr<cv::CylindricalWarperGpu>();
+				_warperCreator = cv::makePtr<cv::CylindricalWarperGpu>();
 				break;
 			case SPHERICAL:
-				_warperCreator = makePtr<cv::SphericalWarperGpu>();
+				_warperCreator = cv::makePtr<cv::SphericalWarperGpu>();
 				break;
 			default:
 				LOGLN("[Stitcher] ERROR: Unknown warp type");
@@ -544,52 +620,52 @@ bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seam
 			switch (warpType)
 			{
 			case PLANE:
-				_warperCreator = makePtr<cv::PlaneWarper>();
+				_warperCreator = cv::makePtr<cv::PlaneWarper>();
 				break;
 			case WARP_AFFINE:
-				_warperCreator = makePtr<cv::AffineWarper>();
+				_warperCreator = cv::makePtr<cv::AffineWarper>();
 				break;
 			case CYLINDRICAL:
-				_warperCreator = makePtr<cv::CylindricalWarper>();
+				_warperCreator = cv::makePtr<cv::CylindricalWarper>();
 				break;
 			case SPHERICAL:
-				_warperCreator = makePtr<cv::SphericalWarper>();
+				_warperCreator = cv::makePtr<cv::SphericalWarper>();
 				break;
 			case FISHEYE:
-				_warperCreator = makePtr<cv::FisheyeWarper>();
+				_warperCreator = cv::makePtr<cv::FisheyeWarper>();
 				break;
 			case STEREOGRAPHIC:
-				_warperCreator = makePtr<cv::StereographicWarper>();
+				_warperCreator = cv::makePtr<cv::StereographicWarper>();
 				break;
 			case COMPRESSEDPLANEA2B1:
-				_warperCreator = makePtr<cv::CompressedRectilinearWarper>(2.0f, 1.0f);
+				_warperCreator = cv::makePtr<cv::CompressedRectilinearWarper>(2.0f, 1.0f);
 				break;
 			case COMPRESSEDPLANEA1_5B1:
-				_warperCreator = makePtr<cv::CompressedRectilinearWarper>(1.5f, 1.0f);
+				_warperCreator = cv::makePtr<cv::CompressedRectilinearWarper>(1.5f, 1.0f);
 				break;
 			case COMPRESSEDPLANEPORTRAITA2B1:
-				_warperCreator = makePtr<cv::CompressedRectilinearPortraitWarper>(2.0f, 1.0f);
+				_warperCreator = cv::makePtr<cv::CompressedRectilinearPortraitWarper>(2.0f, 1.0f);
 				break;
 			case COMPRESSEDPLANEPORTRAITA1_5B1:
-				_warperCreator = makePtr<cv::CompressedRectilinearPortraitWarper>(1.5f, 1.0f);
+				_warperCreator = cv::makePtr<cv::CompressedRectilinearPortraitWarper>(1.5f, 1.0f);
 				break;
 			case PANINIA2B1:
-				_warperCreator = makePtr<cv::PaniniWarper>(2.0f, 1.0f);
+				_warperCreator = cv::makePtr<cv::PaniniWarper>(2.0f, 1.0f);
 				break;
 			case PANINIA1_5B1:
-				_warperCreator = makePtr<cv::PaniniWarper>(1.5f, 1.0f);
+				_warperCreator = cv::makePtr<cv::PaniniWarper>(1.5f, 1.0f);
 				break;
 			case PANINIPORTRAITA2B1:
-				_warperCreator = makePtr<cv::PaniniPortraitWarper>(2.0f, 1.0f);
+				_warperCreator = cv::makePtr<cv::PaniniPortraitWarper>(2.0f, 1.0f);
 				break;
 			case PANINIPORTRAITA1_5B1:
-				_warperCreator = makePtr<cv::PaniniPortraitWarper>(1.5f, 1.0f);
+				_warperCreator = cv::makePtr<cv::PaniniPortraitWarper>(1.5f, 1.0f);
 				break;
 			case MERCATOR:
-				_warperCreator = makePtr<cv::MercatorWarper>();
+				_warperCreator = cv::makePtr<cv::MercatorWarper>();
 				break;
 			case TRANSVERSEMERCATOR:
-				_warperCreator = makePtr<cv::TransverseMercatorWarper>();
+				_warperCreator = cv::makePtr<cv::TransverseMercatorWarper>();
 				break;
 			default:
 				LOGLN("[Stitcher] ERROR: Unknown warp type");
@@ -605,29 +681,29 @@ bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seam
 
 	if (!_isSeamScaleSet)
 	{
-		_seamScale = min(1.0, sqrt(seamMegapix * 1e6 / _images[0].size().area()));
+		_seamScale = std::min(1.0, sqrt(seamMegapix * 1e6 / _images[0].size().area()));
 		_seamWorkAspect = _seamScale / _workScale;
 		_isSeamScaleSet = true;
 	}
 
-	Ptr<RotationWarper> warper = _warperCreator->create(static_cast<float>(_warpedImageScale * _seamWorkAspect));
-	Mat img;
+	cv::Ptr<RotationWarper> warper = _warperCreator->create(static_cast<float>(_warpedImageScale * _seamWorkAspect));
+	cv::Mat img;
 	for (int i = 0; i < _numImages; ++i)
 	{
-		cv::resize(_images[i], img, Size(), _seamScale, _seamScale);
+		cv::resize(_images[i], img, cv::Size(), _seamScale, _seamScale);
 		//_images[i] = img.clone();
 
 		// Prepare images masks
 		masks[i].create(img.size(), CV_8U);
-		masks[i].setTo(Scalar::all(255));
+		masks[i].setTo(cv::Scalar::all(255));
 
-		Mat_<float> K;
+		cv::Mat_<float> K;
 		_cameras[i].K().convertTo(K, CV_32F);
 		float swa = (float)_seamWorkAspect;
 		K(0, 0) *= swa; K(0, 2) *= swa;
 		K(1, 1) *= swa; K(1, 2) *= swa;
 
-		_corners[i] = warper->warp(img, K, _cameras[i].R, INTER_LINEAR, BORDER_REFLECT, _imagesWarped[i]);
+		_corners[i] = warper->warp(img, K, _cameras[i].R, cv::INTER_LINEAR, cv::BORDER_REFLECT, _imagesWarped[i]);
 
 		//LOGLN("_warpedImageScale: " << _warpedImageScale);
 		//LOGLN("_seamWorkAspect: " << _seamWorkAspect);
@@ -639,7 +715,7 @@ bool MedusaCalibrationTool::Stitcher::WarpAux(WarpingTypes warpType, double seam
 		//ss << "masks_" << i << ".jpg";
 		//imwrite(ss.str(), masks[i]);
 
-		warper->warp(masks[i], K, _cameras[i].R, INTER_NEAREST, BORDER_CONSTANT, _masksWarpedSeam[i]);
+		warper->warp(masks[i], K, _cameras[i].R, cv::INTER_NEAREST, cv::BORDER_CONSTANT, _masksWarpedSeam[i]);
 
 		//ss.str("");
 		//ss << "mask_s_warp" << i << ".jpg";
@@ -672,36 +748,36 @@ bool MedusaCalibrationTool::Stitcher::SeamFinding(SeamFindTypes seamFindType)
 		return false;
 	}
 
-	Ptr<SeamFinder> seam_finder;
+	cv::Ptr<cv::detail::SeamFinder> seam_finder;
 	switch (seamFindType)
 	{
 	case NO:
-		seam_finder = makePtr<detail::NoSeamFinder>();
+		seam_finder = cv::makePtr<detail::NoSeamFinder>();
 		break;
 	case VORONOI:
-		seam_finder = makePtr<detail::VoronoiSeamFinder>();
+		seam_finder = cv::makePtr<detail::VoronoiSeamFinder>();
 		break;
 	case GC_COLOR:
 #ifdef HAVE_OPENCV_CUDALEGACY
-		if (cuda::getCudaEnabledDeviceCount() > 0)
-			seam_finder = makePtr<detail::GraphCutSeamFinderGpu>(GraphCutSeamFinderBase::COST_COLOR);
+		if (cv::cuda::getCudaEnabledDeviceCount() > 0)
+			seam_finder = cv::makePtr<detail::GraphCutSeamFinderGpu>(GraphCutSeamFinderBase::COST_COLOR);
 		else
 #endif
-			seam_finder = makePtr<detail::GraphCutSeamFinder>(GraphCutSeamFinderBase::COST_COLOR);
+			seam_finder = cv::makePtr<detail::GraphCutSeamFinder>(GraphCutSeamFinderBase::COST_COLOR);
 		break;
 	case GC_COLORGRAD:
 #ifdef HAVE_OPENCV_CUDALEGACY
-		if (cuda::getCudaEnabledDeviceCount() > 0)
-			seam_finder = makePtr<detail::GraphCutSeamFinderGpu>(GraphCutSeamFinderBase::COST_COLOR_GRAD);
+		if (cv::cuda::getCudaEnabledDeviceCount() > 0)
+			seam_finder = cv::makePtr<detail::GraphCutSeamFinderGpu>(GraphCutSeamFinderBase::COST_COLOR_GRAD);
 		else
 #endif
-			seam_finder = makePtr<detail::GraphCutSeamFinder>(GraphCutSeamFinderBase::COST_COLOR_GRAD);
+			seam_finder = cv::makePtr<detail::GraphCutSeamFinder>(GraphCutSeamFinderBase::COST_COLOR_GRAD);
 		break;
 	case DP_COLOR:
-		seam_finder = makePtr<detail::DpSeamFinder>(DpSeamFinder::COLOR);
+		seam_finder = cv::makePtr<detail::DpSeamFinder>(DpSeamFinder::COLOR);
 		break;
 	case DP_COLORGRAD:
-		seam_finder = makePtr<detail::DpSeamFinder>(DpSeamFinder::COLOR_GRAD);
+		seam_finder = cv::makePtr<detail::DpSeamFinder>(DpSeamFinder::COLOR_GRAD);
 		break;
 	default:
 		LOGLN("[Stitcher] ERROR: Unknown seam find type");
@@ -934,7 +1010,7 @@ bool MedusaCalibrationTool::Stitcher::PrepareBlend(int blendType, float blendStr
 }
 
 #ifdef WITH_CUDA
-bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
+bool Stitcher::Compose(std::vector<cv::cuda::GpuMat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama, bool lowQualityStitching)
 {
 
 #if ENABLE_LOG
@@ -1017,7 +1093,7 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, 
 
 	Mat img_warped, img_warped_s;
 	Mat dilated_mask, seam_mask;
-	cuda::GpuMat full_img, img;
+	cv::cuda::GpuMat full_img, img;
 
 #if ENABLE_LOG
 	clock_t t_begin = clock();
@@ -1055,7 +1131,7 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, 
 		full_img = _images_gpu[img_idx];
 
 		if (abs(_composeScale - 1) > 1e-1)
-			cuda::resize(full_img, img, Size(), _composeScale, _composeScale);
+			cv::cuda::resize(full_img, img, Size(), _composeScale, _composeScale);
 		else
 			img = full_img;
 		full_img.release();
@@ -1066,13 +1142,13 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, 
 #if ENABLE_LOG
 		t = getTickCount();
 #endif
-		cuda::GpuMat img_warped_gpu;
+		cv::cuda::GpuMat img_warped_gpu;
 
 #if ENABLE_LOG
 		t_begin = clock();
 #endif
 
-		cuda::remap(img, img_warped_gpu, _xmap_gpu[img_idx], _ymap_gpu[img_idx], INTER_LINEAR, BORDER_REFLECT);
+		cv::cuda::remap(img, img_warped_gpu, _xmap_gpu[img_idx], _ymap_gpu[img_idx], INTER_LINEAR, BORDER_REFLECT);
 
 #if ENABLE_LOG
 		t_end = clock();
@@ -1214,7 +1290,7 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<cuda::GpuMat> images, 
 	return true;
 }
 #else
-bool MedusaCalibrationTool::Stitcher::Compose(std::vector<Mat> images, Mat& result, Mat& resultMask, bool showOverviewInPanorama)
+bool Stitcher::Compose(std::vector<cv::Mat> images, cv::Mat& result, cv::Mat& resultMask, bool showOverviewInPanorama)
 {
 	if (_numImagesTot <= 0)
 	{
@@ -1288,9 +1364,9 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<Mat> images, Mat& resu
 		_images.push_back(images[_validIndices[i]]);
 	}
 
-	Mat img_warped, img_warped_s;
-	Mat dilated_mask, seam_mask;
-	Mat full_img, img;
+	cv::Mat img_warped, img_warped_s;
+	cv::Mat dilated_mask, seam_mask;
+	cv::Mat full_img, img;
 
 #if ENABLE_LOG
 	clock_t t_begin = clock();
@@ -1366,7 +1442,7 @@ bool MedusaCalibrationTool::Stitcher::Compose(std::vector<Mat> images, Mat& resu
 #endif
 		img_warped.convertTo(img_warped_s, CV_16S);
 
-		dilate(_masksWarpedSeam[img_idx], dilated_mask, Mat());
+		dilate(_masksWarpedSeam[img_idx], dilated_mask, cv::Mat());
 		resize(dilated_mask, seam_mask, _masksWarpedCompose[img_idx].size());
 		_masksWarpedCompose[img_idx] = seam_mask & _masksWarpedCompose[img_idx];
 		dilated_mask.release();
